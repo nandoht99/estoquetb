@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toro Bianco - Controle de Estoque</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/VbLQ5qg.png">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      padding: 20px;
+      background: linear-gradient(to right, #f2f2f2, #e0e0e0);
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #222;
+      text-shadow: 1px 1px 2px #ccc;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .tab-button {
+      flex: 1;
+      padding: 10px;
+      background-color: #ddd;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    .tab-button:hover {
+      background-color: #ccc;
+    }
+    .tab-button.active {
+      background-color: #fff;
+      font-weight: bold;
+      box-shadow: inset 0 -3px 0 #444;
+    }
+    .tab-content {
+      display: none;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .tab-content.active {
+      display: block;
+    }
+    label, input, textarea, select, button {
+      display: block;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    input, textarea, select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f9f9f9;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .row select {
+      flex: 1;
+    }
+    .row button {
+      flex: none;
+      width: auto;
+      padding: 8px 12px;
+    }
+    #popupCategoria {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 20px;
+      border: 2px solid #444;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      z-index: 1000;
+      border-radius: 10px;
+    }
+    #popupCategoria input, #popupCategoria button {
+      width: 100%;
+      margin-top: 10px;
+    }
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+    .tab-button i {
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Toro Bianco - Controle de Estoque</h1>
+  <div class="tabs">
+    <div class="tab-button active" onclick="showTab('registro', this)"><i class="fas fa-plus-circle"></i>Registrar</div>
+    <div class="tab-button" onclick="showTab('baixa', this)"><i class="fas fa-minus-circle"></i>Dar Baixa</div>
+    <div class="tab-button" onclick="showTab('estoque', this)"><i class="fas fa-boxes"></i>Estoque Atual</div>
+    <div class="tab-button" onclick="showTab('historico', this)"><i class="fas fa-history"></i>Histórico</div>
+  </div>
+
+  <div class="tab-content active" id="registro">
+    <label>Produto</label><input id="produtoRegistro" type="text" placeholder="Nome do produto">
+    <label>Quantidade</label><input id="quantidadeRegistro" type="number" placeholder="Quantidade">
+    <label>Responsável</label><input id="responsavelRegistro" type="text" placeholder="Responsável">
+    <div class="row">
+      <select id="categoriaSelect"></select>
+      <button onclick="abrirPopupCategoria()"><i class="fas fa-plus"></i></button>
+    </div>
+    <button onclick="registrarEntrada()">Registrar Entrada</button>
+  </div>
+
+  <div class="tab-content" id="baixa">
+    <label>Categoria</label>
+    <select id="filtroCategoria" onchange="filtrarProdutos()"></select>
+    <label>Buscar Produto</label>
+    <input id="buscaProduto" type="text" placeholder="Digite o nome" oninput="filtrarProdutos()">
+    <div id="listaProdutos"></div>
+  </div>
+
+  <div class="tab-content" id="estoque">
+    <h2>Estoque Atual</h2>
+    <table id="tabelaEstoque"><thead><tr><th>Produto</th><th>Categoria</th><th>Quantidade</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="tab-content" id="historico">
+    <h2>Histórico de Movimentações</h2>
+    <table id="tabelaHistorico"><thead><tr><th>Data</th><th>Produto</th><th>Categoria</th><th>Tipo</th><th>Quantidade</th><th>Responsável</th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div id="overlay"></div>
+  <div id="popupCategoria">
+    <h3>Adicionar Nova Categoria</h3>
+    <input type="text" id="novaCategoria" placeholder="Nome da categoria">
+    <button onclick="confirmarCategoria()">Confirmar</button>
+    <button onclick="fecharPopupCategoria()">Cancelar</button>
+  </div>
+
+  <script>
+    let categorias = ["Madeiras", "Ferragens"];
+    let estoque = [];
+    let historico = [];
+
+    function showTab(tabId, element) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      element.classList.add('active');
+    }
+
+    function abrirPopupCategoria() {
+      document.getElementById("overlay").style.display = "block";
+      document.getElementById("popupCategoria").style.display = "block";
+    }
+
+    function fecharPopupCategoria() {
+      document.getElementById("overlay").style.display = "none";
+      document.getElementById("popupCategoria").style.display = "none";
+      document.getElementById("novaCategoria").value = "";
+    }
+
+    function confirmarCategoria() {
+      const nova = document.getElementById("novaCategoria").value.trim();
+      if (nova && !categorias.includes(nova)) {
+        categorias.push(nova);
+        atualizarCategorias();
+      }
+      fecharPopupCategoria();
+    }
+
+    function atualizarCategorias() {
+      const selects = [document.getElementById("categoriaSelect"), document.getElementById("filtroCategoria")];
+      selects.forEach(select => {
+        select.innerHTML = "<option value=''>Selecione</option>";
+        categorias.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat;
+          opt.textContent = cat;
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    function registrarEntrada() {
+      const produto = document.getElementById("produtoRegistro").value;
+      const quantidade = parseInt(document.getElementById("quantidadeRegistro").value);
+      const responsavel = document.getElementById("responsavelRegistro").value;
+      const categoria = document.getElementById("categoriaSelect").value;
+      if (!produto || !quantidade || !categoria || !responsavel) return alert("Preencha todos os campos.");
+
+      const item = estoque.find(i => i.produto === produto && i.categoria === categoria);
+      if (item) item.quantidade += quantidade;
+      else estoque.push({ produto, categoria, quantidade });
+
+      adicionarAoHistorico(produto, categoria, "Entrada", quantidade, responsavel);
+      atualizarTabelaEstoque();
+      alert("Entrada registrada!");
+    }
+
+    function adicionarAoHistorico(produto, categoria, tipo, quantidade, responsavel) {
+      const data = new Date().toLocaleString('pt-BR');
+      historico.push({ data, produto, categoria, tipo, quantidade, responsavel });
+      atualizarTabelaHistorico();
+    }
+
+    function atualizarTabelaHistorico() {
+      const tabela = document.getElementById("tabelaHistorico").querySelector("tbody");
+      tabela.innerHTML = "";
+      historico.forEach(item => {
+        const row = tabela.insertRow();
+        row.innerHTML = `<td>${item.data}</td><td>${item.produto}</td><td>${item.categoria}</td><td>${item.tipo}</td><td>${item.quantidade}</td><td>${item.responsavel}</td>`;
+      });
+    }
+
+    function atualizarTabelaEstoque() {
+      const tabela = document.getElementById("tabelaEstoque").querySelector("tbody");
+      tabela.innerHTML = "";
+      estoque.forEach(item => {
+        const row = tabela.insertRow();
+        row.innerHTML = `<td>${item.produto}</td><td>${item.categoria}</td><td>${item.quantidade}</td>`;
+      });
+    }
+
+    function filtrarProdutos() {
+      const cat = document.getElementById("filtroCategoria").value;
+      const filtro = document.getElementById("buscaProduto").value.toLowerCase();
+      const lista = document.getElementById("listaProdutos");
+      lista.innerHTML = "";
+      estoque.filter(item => (!cat || item.categoria === cat) && item.produto.toLowerCase().includes(filtro)).forEach(item => {
+        const div = document.createElement("div");
+        div.textContent = `${item.produto} (${item.quantidade})`;
+        const btn = document.createElement("button");
+        btn.textContent = "Dar baixa";
+        btn.onclick = () => {
+          const qtde = prompt("Quantidade para dar baixa:");
+          const resp = prompt("Responsável:");
+          if (qtde && resp) {
+            const q = parseInt(qtde);
+            if (q > 0 && item.quantidade >= q) {
+              item.quantidade -= q;
+              adicionarAoHistorico(item.produto, item.categoria, "Saída", q, resp);
+              atualizarTabelaEstoque();
+              filtrarProdutos();
+            } else {
+              alert("Quantidade inválida.");
+            }
+          }
+        };
+        div.appendChild(btn);
+        lista.appendChild(div);
+      });
+    }
+
+    atualizarCategorias();
+  </script>
+</body>
+</html>
