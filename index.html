@@ -2,10 +2,10 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Toro Bianco - Controle de Estoque</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="https://i.imgur.com/VbLQ5qg.png">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="https://i.imgur.com/VbLQ5qg.png" />
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <style>
     body {
@@ -13,11 +13,14 @@
       padding: 20px;
       background: linear-gradient(to right, #f2f2f2, #e0e0e0);
       color: #333;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
     h1 {
       text-align: center;
       color: #222;
       text-shadow: 1px 1px 2px #ccc;
+      margin-bottom: 30px;
     }
     .tabs {
       display: flex;
@@ -34,6 +37,12 @@
       cursor: pointer;
       text-align: center;
       transition: background-color 0.3s;
+      user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
     }
     .tab-button:hover {
       background-color: #ccc;
@@ -57,12 +66,14 @@
       display: block;
       margin-bottom: 10px;
       width: 100%;
+      font-size: 1rem;
     }
     input, textarea, select {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 5px;
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+      font-family: 'Roboto', sans-serif;
     }
     button {
       background-color: #007BFF;
@@ -71,6 +82,8 @@
       padding: 10px;
       border-radius: 5px;
       cursor: pointer;
+      font-weight: 600;
+      transition: background-color 0.3s;
     }
     button:hover {
       background-color: #0056b3;
@@ -81,11 +94,13 @@
       background-color: #fff;
       border-radius: 10px;
       overflow: hidden;
+      margin-top: 20px;
     }
     th, td {
       border: 1px solid #ccc;
       padding: 8px;
       text-align: left;
+      font-size: 0.9rem;
     }
     th {
       background-color: #f9f9f9;
@@ -94,6 +109,7 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .row select {
       flex: 1;
@@ -102,6 +118,11 @@
       flex: none;
       width: auto;
       padding: 8px 12px;
+      font-size: 1.2rem;
+      line-height: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     #popupCategoria {
       display: none;
@@ -115,10 +136,13 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       z-index: 1000;
       border-radius: 10px;
+      width: 320px;
+      max-width: 90vw;
     }
     #popupCategoria input, #popupCategoria button {
       width: 100%;
       margin-top: 10px;
+      font-size: 1rem;
     }
     #overlay {
       display: none;
@@ -133,170 +157,421 @@
     .tab-button i {
       margin-right: 5px;
     }
+    .inline-flex {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .inline-flex select {
+      width: auto;
+      min-width: 200px;
+    }
+    .small-button {
+      padding: 4px 10px;
+      font-size: 1.3rem;
+      border-radius: 50%;
+      line-height: 1;
+      height: 36px;
+      width: 36px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
   <h1>Toro Bianco - Controle de Estoque</h1>
   <div class="tabs">
-    <div class="tab-button active" onclick="showTab('registro', this)"><i class="fas fa-plus-circle"></i>Registrar</div>
-    <div class="tab-button" onclick="showTab('baixa', this)"><i class="fas fa-minus-circle"></i>Dar Baixa</div>
-    <div class="tab-button" onclick="showTab('estoque', this)"><i class="fas fa-boxes"></i>Estoque Atual</div>
-    <div class="tab-button" onclick="showTab('historico', this)"><i class="fas fa-history"></i>Histórico</div>
-  </div>
-
-  <div class="tab-content active" id="registro">
-    <label>Produto</label><input id="produtoRegistro" type="text" placeholder="Nome do produto">
-    <label>Quantidade</label><input id="quantidadeRegistro" type="number" placeholder="Quantidade">
-    <label>Responsável</label><input id="responsavelRegistro" type="text" placeholder="Responsável">
-    <div class="row">
-      <select id="categoriaSelect"></select>
-      <button onclick="abrirPopupCategoria()"><i class="fas fa-plus"></i></button>
+    <div class="tab-button active" onclick="showTab('registro', this)">
+      <i class="fas fa-plus-circle"></i> Registrar
     </div>
-    <button onclick="registrarEntrada()">Registrar Entrada</button>
+    <div class="tab-button" onclick="showTab('baixa', this)">
+      <i class="fas fa-minus-circle"></i> Dar Baixa
+    </div>
+    <div class="tab-button" onclick="showTab('estoque', this)">
+      <i class="fas fa-boxes"></i> Estoque Atual
+    </div>
+    <div class="tab-button" onclick="showTab('historico', this)">
+      <i class="fas fa-history"></i> Histórico
+    </div>
   </div>
 
-  <div class="tab-content" id="baixa">
-    <label>Categoria</label>
-    <select id="filtroCategoria" onchange="filtrarProdutos()"></select>
-    <label>Buscar Produto</label>
-    <input id="buscaProduto" type="text" placeholder="Digite o nome" oninput="filtrarProdutos()">
-    <div id="listaProdutos"></div>
+  <!-- Conteúdos das abas -->
+  <div id="registro" class="tab-content active">
+    <h2>Registrar Nova Mercadoria</h2>
+
+    <div class="row inline-flex" style="margin-bottom: 15px;">
+      <label for="categoriaSelect" style="margin-right: 10px; margin-bottom: 0;">Categoria:</label>
+      <select id="categoriaSelect" style="flex:1;"></select>
+      <button class="small-button" title="Adicionar categoria" onclick="abrirPopupCategoria()">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+
+    <label for="nomeMercadoria">Nome da Mercadoria:</label>
+    <input type="text" id="nomeMercadoria" placeholder="Ex: Tábua de madeira" />
+
+    <label for="quantidadeMercadoria">Quantidade:</label>
+    <input type="number" id="quantidadeMercadoria" min="1" value="1" />
+
+    <button onclick="registrarMercadoria()">Registrar</button>
+
+    <hr style="margin: 25px 0;" />
+
+    <h3>Itens já cadastrados (selecione para editar)</h3>
+    <select id="itensCadastradosSelect" onchange="carregarItemParaEditar()">
+      <option value="">-- Selecione um item --</option>
+    </select>
+
+    <button onclick="limparFormulario()">Limpar formulário</button>
   </div>
 
-  <div class="tab-content" id="estoque">
+  <div id="baixa" class="tab-content">
+    <h2>Dar Baixa no Estoque</h2>
+    <label for="filtroCategoriaBaixa">Filtrar por Categoria:</label>
+    <select id="filtroCategoriaBaixa" onchange="filtrarItensParaBaixa()"></select>
+
+    <label for="buscaBaixa">Buscar item na categoria:</label>
+    <input type="text" id="buscaBaixa" placeholder="Digite o nome..." oninput="filtrarItensParaBaixa()" />
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Categoria</th>
+          <th>Quantidade disponível</th>
+          <th>Quantidade para baixar</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaBaixaCorpo"></tbody>
+    </table>
+  </div>
+
+  <div id="estoque" class="tab-content">
     <h2>Estoque Atual</h2>
-    <table id="tabelaEstoque"><thead><tr><th>Produto</th><th>Categoria</th><th>Quantidade</th></tr></thead><tbody></tbody></table>
+    <table>
+      <thead>
+        <tr><th>Nome</th><th>Categoria</th><th>Quantidade</th></tr>
+      </thead>
+      <tbody id="tabelaEstoqueCorpo"></tbody>
+    </table>
   </div>
 
-  <div class="tab-content" id="historico">
+  <div id="historico" class="tab-content">
     <h2>Histórico de Movimentações</h2>
-    <table id="tabelaHistorico"><thead><tr><th>Data</th><th>Produto</th><th>Categoria</th><th>Tipo</th><th>Quantidade</th><th>Responsável</th></tr></thead><tbody></tbody></table>
+    <table>
+      <thead>
+        <tr><th>Data</th><th>Tipo</th><th>Nome</th><th>Categoria</th><th>Quantidade</th></tr>
+      </thead>
+      <tbody id="tabelaHistoricoCorpo"></tbody>
+    </table>
   </div>
 
-  <div id="overlay"></div>
+  <!-- Popup categoria -->
   <div id="popupCategoria">
     <h3>Adicionar Nova Categoria</h3>
-    <input type="text" id="novaCategoria" placeholder="Nome da categoria">
-    <button onclick="confirmarCategoria()">Confirmar</button>
-    <button onclick="fecharPopupCategoria()">Cancelar</button>
+    <input type="text" id="novaCategoriaNome" placeholder="Nome da nova categoria" />
+    <button onclick="confirmarNovaCategoria()">Confirmar</button>
+    <button onclick="fecharPopupCategoria()" style="background:#999; margin-top: 5px;">Cancelar</button>
   </div>
+  <div id="overlay"></div>
 
   <script>
-    let categorias = ["Madeiras", "Ferragens"];
-    let estoque = [];
+    // Dados armazenados localmente
+    let categorias = ['Madeira', 'Ferramenta', 'Acabamento'];
+    let mercadorias = [];
     let historico = [];
 
-    function showTab(tabId, element) {
-      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      element.classList.add('active');
-    }
-
-    function abrirPopupCategoria() {
-      document.getElementById("overlay").style.display = "block";
-      document.getElementById("popupCategoria").style.display = "block";
-    }
-
-    function fecharPopupCategoria() {
-      document.getElementById("overlay").style.display = "none";
-      document.getElementById("popupCategoria").style.display = "none";
-      document.getElementById("novaCategoria").value = "";
-    }
-
-    function confirmarCategoria() {
-      const nova = document.getElementById("novaCategoria").value.trim();
-      if (nova && !categorias.includes(nova)) {
-        categorias.push(nova);
-        atualizarCategorias();
-      }
-      fecharPopupCategoria();
-    }
-
-    function atualizarCategorias() {
-      const selects = [document.getElementById("categoriaSelect"), document.getElementById("filtroCategoria")];
-      selects.forEach(select => {
-        select.innerHTML = "<option value=''>Selecione</option>";
-        categorias.forEach(cat => {
-          const opt = document.createElement("option");
-          opt.value = cat;
-          opt.textContent = cat;
-          select.appendChild(opt);
-        });
-      });
-    }
-
-    function registrarEntrada() {
-      const produto = document.getElementById("produtoRegistro").value;
-      const quantidade = parseInt(document.getElementById("quantidadeRegistro").value);
-      const responsavel = document.getElementById("responsavelRegistro").value;
-      const categoria = document.getElementById("categoriaSelect").value;
-      if (!produto || !quantidade || !categoria || !responsavel) return alert("Preencha todos os campos.");
-
-      const item = estoque.find(i => i.produto === produto && i.categoria === categoria);
-      if (item) item.quantidade += quantidade;
-      else estoque.push({ produto, categoria, quantidade });
-
-      adicionarAoHistorico(produto, categoria, "Entrada", quantidade, responsavel);
+    // Inicializar selects e dados
+    function init() {
+      atualizarCategoriasSelects();
+      atualizarItensCadastradosSelect();
       atualizarTabelaEstoque();
-      alert("Entrada registrada!");
-    }
-
-    function adicionarAoHistorico(produto, categoria, tipo, quantidade, responsavel) {
-      const data = new Date().toLocaleString('pt-BR');
-      historico.push({ data, produto, categoria, tipo, quantidade, responsavel });
+      atualizarFiltroBaixa();
+      atualizarTabelaBaixa();
       atualizarTabelaHistorico();
     }
 
-    function atualizarTabelaHistorico() {
-      const tabela = document.getElementById("tabelaHistorico").querySelector("tbody");
-      tabela.innerHTML = "";
-      historico.forEach(item => {
-        const row = tabela.insertRow();
-        row.innerHTML = `<td>${item.data}</td><td>${item.produto}</td><td>${item.categoria}</td><td>${item.tipo}</td><td>${item.quantidade}</td><td>${item.responsavel}</td>`;
+    // Troca abas
+    function showTab(tabId, btn) {
+      document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Atualiza selects de categoria
+    function atualizarCategoriasSelects() {
+      const categoriaSelect = document.getElementById('categoriaSelect');
+      const filtroCategoriaBaixa = document.getElementById('filtroCategoriaBaixa');
+
+      [categoriaSelect, filtroCategoriaBaixa].forEach(select => {
+        // Remove todas opções, exceto a padrão se houver
+        while (select.options.length > 0) {
+          select.remove(0);
+        }
+      });
+
+      // Para filtro da aba baixa, adiciona opção "Todas"
+      let optionTodas = document.createElement('option');
+      optionTodas.value = '';
+      optionTodas.textContent = 'Todas Categorias';
+      document.getElementById('filtroCategoriaBaixa').appendChild(optionTodas);
+
+      categorias.forEach(cat => {
+        let option1 = document.createElement('option');
+        option1.value = cat;
+        option1.textContent = cat;
+        categoriaSelect.appendChild(option1);
+
+        let option2 = document.createElement('option');
+        option2.value = cat;
+        option2.textContent = cat;
+        filtroCategoriaBaixa.appendChild(option2);
       });
     }
 
+    // Popup para adicionar categoria
+    function abrirPopupCategoria() {
+      document.getElementById('novaCategoriaNome').value = '';
+      document.getElementById('popupCategoria').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('novaCategoriaNome').focus();
+    }
+    function fecharPopupCategoria() {
+      document.getElementById('popupCategoria').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+    function confirmarNovaCategoria() {
+      const nome = document.getElementById('novaCategoriaNome').value.trim();
+      if (!nome) {
+        alert('Digite um nome válido para a categoria.');
+        return;
+      }
+      if (categorias.includes(nome)) {
+        alert('Categoria já existe!');
+        return;
+      }
+      categorias.push(nome);
+      atualizarCategoriasSelects();
+      fecharPopupCategoria();
+      alert(`Categoria "${nome}" adicionada com sucesso!`);
+    }
+
+    // Registrar mercadoria
+    function registrarMercadoria() {
+      const categoria = document.getElementById('categoriaSelect').value;
+      const nome = document.getElementById('nomeMercadoria').value.trim();
+      const quantidade = parseInt(document.getElementById('quantidadeMercadoria').value, 10);
+
+      if (!categoria) {
+        alert('Selecione uma categoria.');
+        return;
+      }
+      if (!nome) {
+        alert('Digite o nome da mercadoria.');
+        return;
+      }
+      if (!quantidade || quantidade < 1) {
+        alert('Digite uma quantidade válida.');
+        return;
+      }
+
+      // Verifica se mercadoria já existe com a mesma categoria e nome (case insensitive)
+      let itemExistente = mercadorias.find(m => m.nome.toLowerCase() === nome.toLowerCase() && m.categoria === categoria);
+      if (itemExistente) {
+        // Atualiza quantidade (adiciona)
+        itemExistente.quantidade += quantidade;
+      } else {
+        mercadorias.push({nome, categoria, quantidade});
+      }
+
+      // Salvar no histórico
+      historico.push({
+        data: new Date().toLocaleString(),
+        tipo: 'Entrada',
+        nome,
+        categoria,
+        quantidade
+      });
+
+      alert(`Mercadoria "${nome}" registrada com sucesso!`);
+
+      atualizarTabelaEstoque();
+      atualizarItensCadastradosSelect();
+      atualizarTabelaBaixa();
+      atualizarTabelaHistorico();
+      limparFormulario();
+    }
+
+    // Atualiza dropdown de itens cadastrados na aba registrar
+    function atualizarItensCadastradosSelect() {
+      const select = document.getElementById('itensCadastradosSelect');
+      // limpa opções (menos a padrão)
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      mercadorias.forEach((m, i) => {
+        let option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${m.nome} (${m.categoria}) - Qtd: ${m.quantidade}`;
+        select.appendChild(option);
+      });
+    }
+
+    // Carregar item selecionado no form para editar/acompanhar
+    function carregarItemParaEditar() {
+      const select = document.getElementById('itensCadastradosSelect');
+      const idx = select.value;
+      if (idx === '') {
+        limparFormulario();
+        return;
+      }
+      const item = mercadorias[idx];
+      if (!item) return;
+      document.getElementById('categoriaSelect').value = item.categoria;
+      document.getElementById('nomeMercadoria').value = item.nome;
+      document.getElementById('quantidadeMercadoria').value = item.quantidade;
+    }
+
+    // Limpar formulário da aba registrar
+    function limparFormulario() {
+      document.getElementById('categoriaSelect').value = '';
+      document.getElementById('nomeMercadoria').value = '';
+      document.getElementById('quantidadeMercadoria').value = 1;
+      document.getElementById('itensCadastradosSelect').value = '';
+    }
+
+    // Atualiza tabela de estoque atual
     function atualizarTabelaEstoque() {
-      const tabela = document.getElementById("tabelaEstoque").querySelector("tbody");
-      tabela.innerHTML = "";
-      estoque.forEach(item => {
-        const row = tabela.insertRow();
-        row.innerHTML = `<td>${item.produto}</td><td>${item.categoria}</td><td>${item.quantidade}</td>`;
+      const tbody = document.getElementById('tabelaEstoqueCorpo');
+      tbody.innerHTML = '';
+      mercadorias.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m.nome}</td><td>${m.categoria}</td><td>${m.quantidade}</td>`;
+        tbody.appendChild(tr);
       });
     }
 
-    function filtrarProdutos() {
-      const cat = document.getElementById("filtroCategoria").value;
-      const filtro = document.getElementById("buscaProduto").value.toLowerCase();
-      const lista = document.getElementById("listaProdutos");
-      lista.innerHTML = "";
-      estoque.filter(item => (!cat || item.categoria === cat) && item.produto.toLowerCase().includes(filtro)).forEach(item => {
-        const div = document.createElement("div");
-        div.textContent = `${item.produto} (${item.quantidade})`;
-        const btn = document.createElement("button");
-        btn.textContent = "Dar baixa";
-        btn.onclick = () => {
-          const qtde = prompt("Quantidade para dar baixa:");
-          const resp = prompt("Responsável:");
-          if (qtde && resp) {
-            const q = parseInt(qtde);
-            if (q > 0 && item.quantidade >= q) {
-              item.quantidade -= q;
-              adicionarAoHistorico(item.produto, item.categoria, "Saída", q, resp);
-              atualizarTabelaEstoque();
-              filtrarProdutos();
-            } else {
-              alert("Quantidade inválida.");
-            }
-          }
-        };
-        div.appendChild(btn);
-        lista.appendChild(div);
+    // Atualiza filtro categoria aba baixa
+    function atualizarFiltroBaixa() {
+      const filtro = document.getElementById('filtroCategoriaBaixa');
+      while (filtro.options.length > 1) filtro.remove(1);
+      categorias.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        filtro.appendChild(option);
       });
     }
 
-    atualizarCategorias();
+    // Atualiza tabela para dar baixa
+    function atualizarTabelaBaixa() {
+      filtrarItensParaBaixa();
+    }
+
+    // Filtrar itens para baixa, por categoria e busca texto
+    function filtrarItensParaBaixa() {
+      const filtroCat = document.getElementById('filtroCategoriaBaixa').value;
+      const busca = document.getElementById('buscaBaixa').value.trim().toLowerCase();
+      const tbody = document.getElementById('tabelaBaixaCorpo');
+      tbody.innerHTML = '';
+
+      let itensFiltrados = mercadorias.filter(m => {
+        const condCat = filtroCat ? m.categoria === filtroCat : true;
+        const condBusca = m.nome.toLowerCase().includes(busca);
+        return condCat && condBusca;
+      });
+
+      if (itensFiltrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">Nenhum item encontrado.</td></tr>`;
+        return;
+      }
+
+      itensFiltrados.forEach((item, i) => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${item.nome}</td>
+          <td>${item.categoria}</td>
+          <td>${item.quantidade}</td>
+          <td><input type="number" min="1" max="${item.quantidade}" value="1" id="baixarQtd_${i}" style="width: 60px;" /></td>
+          <td><button onclick="darBaixa(${i})" title="Dar baixa">Baixar</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Dar baixa em item
+    function darBaixa(idx) {
+      const inputQtd = document.getElementById(`baixarQtd_${idx}`);
+      if (!inputQtd) return;
+
+      const qtd = parseInt(inputQtd.value, 10);
+      if (!qtd || qtd < 1) {
+        alert('Informe uma quantidade válida para dar baixa.');
+        return;
+      }
+
+      const item = mercadorias[idx];
+      if (!item) return;
+
+      if (qtd > item.quantidade) {
+        alert('Quantidade para dar baixa maior que o estoque disponível.');
+        return;
+      }
+
+      item.quantidade -= qtd;
+
+      // Salvar no histórico
+      historico.push({
+        data: new Date().toLocaleString(),
+        tipo: 'Saída',
+        nome: item.nome,
+        categoria: item.categoria,
+        quantidade: qtd
+      });
+
+      alert(`Baixa de ${qtd} unidades no item "${item.nome}" realizada.`);
+
+      // Remove item se quantidade zero
+      if (item.quantidade === 0) {
+        mercadorias.splice(idx, 1);
+      }
+
+      atualizarTabelaEstoque();
+      atualizarItensCadastradosSelect();
+      atualizarTabelaBaixa();
+      atualizarTabelaHistorico();
+    }
+
+    // Atualiza tabela do histórico
+    function atualizarTabelaHistorico() {
+      const tbody = document.getElementById('tabelaHistoricoCorpo');
+      tbody.innerHTML = '';
+
+      if (historico.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">Nenhuma movimentação realizada.</td></tr>`;
+        return;
+      }
+
+      historico.forEach(h => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${h.data}</td>
+          <td>${h.tipo}</td>
+          <td>${h.nome}</td>
+          <td>${h.categoria}</td>
+          <td>${h.quantidade}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Inicializa
+    init();
+
   </script>
 </body>
 </html>
